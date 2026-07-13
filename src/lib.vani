@@ -1,0 +1,151 @@
+// vani-calculus  v0.1.0 — numerical calculus library
+//
+// IMPORTANT — do NOT reimplement vāṇī compiler builtins.
+// The following are already available as builtins and must be called
+// directly in implementation code, never redeclared here:
+//   sin, cos, tan, asin, acos, atan, atan2, sinh, cosh, tanh
+//   exp, log, log2, log10, pow, sqrt, abs, floor, ceil
+//   f64_erf, f64_erfc, f64_tgamma, f64_lgamma, f64_cbrt, f64_hypot
+//   f64_fma, f64_lerp, f64_inv_lerp, f64_clamp, f64_quadratic_root
+//   i64_factorial, i64_binomial, i64_perm, i64_gcd, i64_lcm
+//   i64_is_prime, i64_fibonacci, f64_geometric_mean, f64_harmonic_mean
+//
+// ── Integration ──────────────────────────────────────────────────────────────
+
+// Trapezoidal rule: ∫ y dx over the grid defined by ys sampled at
+// n equal-width sub-intervals on [a, b].  O(n) passes; error O(h²).
+// TODO: replace stub with loop-based accumulation once Vec iteration
+//       and uniform-step width are wired up.
+fn integrate_trapz(a: f64, b: f64, ys: Vec<f64>) -> f64 {
+    // TODO: h = (b - a) / (length(ys) - 1)
+    //       sum = ys[0]/2 + ys[n-1]/2 + ys[1]...ys[n-2]
+    //       return h * sum
+    return 0.0;
+}
+
+// Simpson's 1/3 rule: ∫ y dx over n (even) equal-width sub-intervals.
+// Error O(h⁴) — much better than trapezoidal for smooth integrands.
+// TODO: validate n is even; accumulate with alternating 4/2 weights.
+fn integrate_simpson(a: f64, b: f64, ys: Vec<f64>) -> f64 {
+    // TODO: h = (b - a) / (length(ys) - 1)
+    //       weights: 1, 4, 2, 4, …, 4, 1
+    //       return (h/3) * weighted_sum
+    return 0.0;
+}
+
+// Romberg integration: Richardson-extrapolated trapezoidal rule.
+// Achieves O(h^{2k}) for k extrapolation levels without extra function evals.
+// TODO: implement R table with k levels.
+fn integrate_romberg(a: f64, b: f64, ys: Vec<f64>, levels: i64) -> f64 {
+    // TODO: build R[0][j] via halved trapezoidal rule, then
+    //       R[i][j] = (4^i * R[i-1][j+1] - R[i-1][j]) / (4^i - 1)
+    return 0.0;
+}
+
+// ── Differentiation ───────────────────────────────────────────────────────────
+
+// Central finite difference: f'(x) ≈ (f(x+h) - f(x-h)) / 2h.
+// Error O(h²).  h defaults to sqrt(machine_epsilon) ≈ 1.5e-8.
+// Caller supplies f(x-h), f(x), f(x+h) to avoid fn-pointer dependency.
+fn diff_central(f_xmh: f64, f_xph: f64, h: f64) -> f64 {
+    // TODO: guard h > 0
+    return (f_xph - f_xmh) / (2.0 * h);
+}
+
+// Forward finite difference: f'(x) ≈ (f(x+h) - f(x)) / h.  Error O(h).
+fn diff_forward(f_x: f64, f_xph: f64, h: f64) -> f64 {
+    return (f_xph - f_x) / h;
+}
+
+// Second derivative: f''(x) ≈ (f(x-h) - 2f(x) + f(x+h)) / h².
+fn diff_second(f_xmh: f64, f_x: f64, f_xph: f64, h: f64) -> f64 {
+    return (f_xmh - 2.0 * f_x + f_xph) / (h * h);
+}
+
+// Numerical gradient of a scalar field sampled on a 1-D grid.
+// Returns Vec<f64> of central-difference derivatives (forward/backward
+// at endpoints).
+// TODO: implement loop over interior points; endpoint special cases.
+fn gradient_1d(xs: Vec<f64>, ys: Vec<f64>) -> Vec<f64> {
+    // TODO: for i in 1..n-1: result[i] = (ys[i+1]-ys[i-1])/(xs[i+1]-xs[i-1])
+    //       result[0]   = forward diff
+    //       result[n-1] = backward diff
+    return vec(0.0);
+}
+
+// ── Root-finding ─────────────────────────────────────────────────────────────
+
+// Bisection method: find root of f in [a, b] to within tol.
+// Caller supplies f(a) and f(b); both signs must differ.
+// Returns the midpoint estimate after max_iter halvings.
+// Note: f64_quadratic_root is already a builtin for degree-2 polys.
+fn bisect_step(a: f64, b: f64, f_a: f64, f_b: f64) -> f64 {
+    // TODO: validate f_a * f_b < 0; return (a+b)/2
+    let mid: f64 = (a + b) / 2.0;
+    return mid;
+}
+
+// Secant method step: x_{n+1} from two previous iterates.
+// Converges super-linearly (~1.618) without needing f'.
+fn secant_step(x0: f64, x1: f64, f_x0: f64, f_x1: f64) -> f64 {
+    // TODO: guard f_x1 - f_x0 != 0
+    return x1 - f_x1 * (x1 - x0) / (f_x1 - f_x0);
+}
+
+// Newton-Raphson step: x_{n+1} = x_n - f(x_n)/f'(x_n).
+// f_prime should be computed via diff_central or supplied analytically.
+fn newton_step(x: f64, f_x: f64, f_prime_x: f64) -> f64 {
+    // TODO: guard f_prime_x != 0
+    return x - f_x / f_prime_x;
+}
+
+// ── ODE solvers ───────────────────────────────────────────────────────────────
+
+// Euler method: advance y' = f(t, y) by one step h.
+// Returns y_{n+1} = y_n + h * f(t_n, y_n).
+// Caller supplies f_val = f(t, y) evaluated at current point.
+fn euler_step(y: f64, h: f64, f_val: f64) -> f64 {
+    return y + h * f_val;
+}
+
+// Classic 4th-order Runge-Kutta step for y' = f(t, y).
+// Caller supplies the four slope evaluations k1..k4.
+// k1 = f(t,       y)
+// k2 = f(t + h/2, y + h/2 * k1)
+// k3 = f(t + h/2, y + h/2 * k2)
+// k4 = f(t + h,   y + h   * k3)
+fn rk4_step(y: f64, h: f64, k1: f64, k2: f64, k3: f64, k4: f64) -> f64 {
+    return y + (h / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
+}
+
+// ── Polynomial arithmetic ─────────────────────────────────────────────────────
+
+// Horner's method: evaluate polynomial p(x) = c[0] + c[1]x + … + c[n]xⁿ.
+// O(n) multiplications.  Does NOT reimplement pow().
+// TODO: implement loop using Horner accumulation.
+fn poly_eval(coeffs: Vec<f64>, x: f64) -> f64 {
+    // TODO: result = coeffs[n]
+    //       for i from n-1 down to 0: result = result * x + coeffs[i]
+    return 0.0;
+}
+
+// Polynomial derivative coefficients: d/dx [c0 + c1 x + c2 x² + …]
+//                                      = [c1, 2*c2, 3*c3, …]
+fn poly_deriv_coeffs(coeffs: Vec<f64>) -> Vec<f64> {
+    // TODO: return [i*coeffs[i] for i in 1..n]
+    return vec(0.0);
+}
+
+// ── Interpolation ─────────────────────────────────────────────────────────────
+
+// Lagrange interpolating polynomial evaluated at x, given n data points.
+// O(n²).  Does NOT reimplement f64_lerp (builtin for n=2 linear case).
+fn lagrange_interp(xs: Vec<f64>, ys: Vec<f64>, x: f64) -> f64 {
+    // TODO: for each j, L_j(x) = prod_{k≠j} (x-xs[k])/(xs[j]-xs[k])
+    //       return sum_j ys[j] * L_j(x)
+    return 0.0;
+}
+
+fn main() -> i64 {
+    return 0;
+}
