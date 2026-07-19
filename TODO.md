@@ -32,54 +32,54 @@ scalar f64 arithmetic — all confirmed working on `Vec<f64>` in the current com
 
 ### Integration
 
-- [ ] `integrate_trapz` — Horner loop: `h/2 * (ys[0] + 2*ys[1] + ... + ys[n-1])`, `h = (b-a)/n`
-- [ ] `integrate_simpson` — alternate 4/2 weights; validate n even at runtime
-- [ ] `integrate_romberg` — Richardson extrapolation table (k levels, recursive); annotate with `#[bounded(k)]`
-- [ ] `integrate_gauss_legendre_5` — 5-point Gauss–Legendre quadrature (baked-in nodes/weights)
-- [ ] `integrate_adaptive_trapz` — recursive halving until `|coarse - fine| < tol`
+- [x] `integrate_trapz` — Horner loop: `h/2 * (ys[0] + 2*ys[1] + ... + ys[n-1])`, `h = (b-a)/n`
+- [x] `integrate_simpson` — alternate 4/2 weights; validate n even at runtime
+- [x] `integrate_romberg` — Richardson extrapolation table (k levels, recursive); annotate with `#[bounded(k)]`
+- [x] `integrate_gauss_legendre_5` — 5-point Gauss–Legendre quadrature (baked-in nodes/weights)
+- [x] `integrate_adaptive_trapz` — recursive halving until `|coarse - fine| < tol`
 
 ### Differentiation
 
-- [ ] `diff_central` — `(f(x+h) - f(x-h)) / (2h)` (already stubbed)
-- [ ] `diff_forward` — `(f(x+h) - f(x)) / h` (already stubbed)
-- [ ] `diff_second` — `(f(x+h) - 2f(x) + f(x-h)) / h²` (already stubbed)
-- [ ] `gradient_1d` — loop: central diff interior, forward/backward at endpoints
-- [ ] `jacobian_1d` — numerical Jacobian for scalar function (2 evals per point)
-- [ ] `hessian_diag` — diagonal of Hessian via second-order finite differences
+- [x] `diff_central` — `(f(x+h) - f(x-h)) / (2h)` (already stubbed)
+- [x] `diff_forward` — `(f(x+h) - f(x)) / h` (already stubbed)
+- [x] `diff_second` — `(f(x+h) - 2f(x) + f(x-h)) / h²` (already stubbed)
+- [x] `gradient_1d` — loop: central diff interior, forward/backward at endpoints
+- [x] `jacobian_1d` — numerical Jacobian for scalar function (2 evals per point)
+- [x] `hessian_diag` — diagonal of Hessian via second-order finite differences
 
 ### Root-finding
 
-- [ ] `bisect_step` → full `bisect` — iterative: `max_iter` halvings, stop when `|b-a| < tol`
-- [ ] `secant_step` → full `secant` — iterative loop with convergence check
-- [ ] `newton_step` → full `newton` — Newton-Raphson using `diff_central` for f′
-- [ ] `brent` — Brent's method (bisect + secant + inverse quadratic); most robust single-function root-finder
+- [x] `bisect_step` → full `bisect` — iterative: `max_iter` halvings, stop when `|b-a| < tol`
+- [x] `secant_step` → full `secant` — iterative loop with convergence check
+- [x] `newton_step` → full `newton` — Newton-Raphson using `diff_central` for f′
+- [x] `brent` — Brent's method (bisect + secant + inverse quadratic); most robust single-function root-finder
 
 ### ODE solvers
 
-- [ ] `euler_step` → `euler_solve` — apply step over a time Vec, return `Vec<f64>` of y values
-- [ ] `rk4_step` → `rk4_solve` — apply step over a time Vec; caller supplies slope function values
-- [ ] `rk45_step` — Dormand-Prince adaptive step with error estimate
-- [ ] `adams_bashforth_2` — two-step explicit linear multistep method
+- [x] `euler_step` → `euler_solve` — apply step over a time Vec, return `Vec<f64>` of y values
+- [x] `rk4_step` → `rk4_solve` — apply step over a time Vec; caller supplies slope function values
+- [x] `rk45_step` — Dormand-Prince adaptive step with error estimate
+- [x] `adams_bashforth_2` — two-step explicit linear multistep method
 
 ### Polynomial arithmetic
 
-- [ ] `poly_eval` — Horner loop; use `f64_fma` builtin for FMA-fused variant
-- [ ] `poly_deriv_coeffs` — differentiation coefficients
-- [ ] `poly_add` / `poly_mul` — coefficient-wise addition and convolution multiply
+- [x] `poly_eval` — Horner loop; use `f64_fma` builtin for FMA-fused variant
+- [x] `poly_deriv_coeffs` — differentiation coefficients
+- [x] `poly_add` / `poly_mul` — coefficient-wise addition and convolution multiply
 
 ### Interpolation
 
-- [ ] `lagrange_interp` — double loop: basis polynomial products
-- [ ] `linear_interp_table` — O(log n) binary-search + lerp (reuse builtin `f64_lerp`)
-- [ ] `cubic_spline_natural` — compute spline coefficients (tridiagonal solve via while loop)
-- [ ] `cubic_spline_eval` — evaluate spline at x given precomputed coefficients
+- [x] `lagrange_interp` — double loop: basis polynomial products
+- [x] `linear_interp_table` — O(log n) binary-search + lerp (reuse builtin `f64_lerp`)
+- [x] `cubic_spline_natural` — compute spline coefficients (tridiagonal solve via while loop)
+- [x] `cubic_spline_eval` — evaluate spline at x given precomputed coefficients
 
 ### Series & summation
 
-- [ ] `kahan_sum` — compensated summation for `Vec<f64>` using `for x in ref xs` manual loop
+- [x] `kahan_sum` — compensated summation for `Vec<f64>` using manual loop
       (workaround until F64-3 lands; `vec_fold` on `Vec<f64>` is the clean form)
-- [ ] `partial_sum` — prefix-sum `Vec<f64>` via `while` loop + `set`
-- [ ] `running_mean_update` — Welford online mean update (single-step, no Vec needed)
+- [x] `partial_sum` — prefix-sum `Vec<f64>` via `while` loop + `set`
+- [x] `running_mean_update` — Welford online mean update (single-step, no Vec needed)
 
 ---
 
