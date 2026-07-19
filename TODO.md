@@ -83,11 +83,16 @@ scalar f64 arithmetic — all confirmed working on `Vec<f64>` in the current com
 
 ---
 
-## Safety / WCET annotations (after all implementations complete)
+## Safety / WCET annotations
 
-- [ ] Add `#[wcet(cycles=N)]` and `#[bounded_stack(bytes=N)]` to all public functions
-      once implementations are complete and cost models are calibrated.
-- [ ] Add `#[bounded(N)]` to any recursive helper (e.g., `integrate_romberg`, `integrate_adaptive_trapz`)
-      and document the recursion bound in the function's comment.
-- [ ] `kahan_sum` and all loop-over-Vec functions: document expected WCET budget formula
-      (`N * cycles_per_iteration`) for the WCET checker.
+- [x] `#[bounded_stack(bytes=N)]` added to all 26 public functions (exact values from
+      `vanic stack-depth`; range 64–520 bytes per frame, 440 bytes entry-point max for
+      `integrate_romberg`).
+- [x] `#[bounded(52)]` added to `integrate_adaptive_trapz` (52 = f64 mantissa halvings
+      before interval underflow; resolves the UNBOUNDED self-recursion warning).
+- [x] `#[wcet(cycles=N)]` added to all 10 leaf functions (no loops, no fn-ptr args);
+      not applicable to data-driven loop functions — the WCET checker rejects `#[wcet]`
+      when a `while i < n` loop has a runtime bound.
+- [x] WCET budget formula documented in per-function comments for all loop-based functions:
+      `n × k cycles` where k is cycles per iteration; fn-ptr functions document
+      `n × (f_cycles + k)` and note that f_cycles depends on caller's f.
