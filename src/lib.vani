@@ -379,6 +379,156 @@ fn brent(a: f64, b: f64, f: fn(f64) -> f64, tol: f64, max_iter: i64) -> f64 {
     return bb;
 }
 
+// ── Optimization ──────────────────────────────────────────────────────────────────────
+
+// Golden-section search: 1D minimum of a unimodal function on [a, b].
+// Each step shrinks the interval by φ ≈ 0.618; converges in ≈2.08 log₁₀((b-a)/tol) evals.
+// WCET = max_iter × (2 × f_cycles + 40) cycles; f_cycles depends on caller's f.
+// bounded_stack = 200 + f's bounded_stack bytes.
+fn golden_section(a: f64, b: f64, f: fn(f64) -> f64, tol: f64, max_iter: i64) -> f64 {
+    let phi: f64 = 0.6180339887498949;
+    let lo: f64 = a;
+    let hi: f64 = b;
+    let c: f64 = hi - phi * (hi - lo);
+    let d: f64 = lo + phi * (hi - lo);
+    let fc: f64 = f(c);
+    let fd: f64 = f(d);
+    let i: i64 = 0;
+    while i < max_iter {
+        if abs(hi - lo) < tol {
+            return (lo + hi) / 2.0;
+        }
+        if fc < fd {
+            hi = d;
+            d = c;
+            fd = fc;
+            c = hi - phi * (hi - lo);
+            fc = f(c);
+        } else {
+            lo = c;
+            c = d;
+            fc = fd;
+            d = lo + phi * (hi - lo);
+            fd = f(d);
+        }
+        i = i + 1;
+    }
+    return (lo + hi) / 2.0;
+}
+
+// Brent's method for 1D minimization: parabolic interpolation + golden-section fallback.
+// Superlinear convergence near the minimum; does not require derivatives.
+// f must have a minimum strictly inside (a, b).
+// WCET = max_iter × (f_cycles + 80) cycles; f_cycles depends on caller's f.
+// bounded_stack = 409 + f's bounded_stack bytes.
+fn brent_min(a: f64, b: f64, f: fn(f64) -> f64, tol: f64, max_iter: i64) -> f64 {
+    let cg: f64 = 0.3819660112501051;
+    let eps: f64 = 1.0e-10;
+    let lo: f64 = a;
+    let hi: f64 = b;
+    let x: f64 = lo + cg * (hi - lo);
+    let w: f64 = x;
+    let v: f64 = x;
+    let fx: f64 = f(x);
+    let fw: f64 = fx;
+    let fv: f64 = fx;
+    let deltax: f64 = 0.0;
+    let i: i64 = 0;
+    while i < max_iter {
+        let xm: f64 = (lo + hi) / 2.0;
+        let t1: f64 = tol * abs(x) + eps;
+        let t2: f64 = 2.0 * t1;
+        if abs(x - xm) < t2 - 0.5 * (hi - lo) {
+            return x;
+        }
+        let rat: f64 = 0.0;
+        if abs(deltax) > t1 {
+            let tmp1: f64 = (x - w) * (fx - fv);
+            let tmp2: f64 = (x - v) * (fx - fw);
+            let p: f64 = (x - v) * tmp2 - (x - w) * tmp1;
+            let raw_q: f64 = 2.0 * (tmp2 - tmp1);
+            let pp: f64 = 0.0;
+            let qq: f64 = 0.0;
+            if raw_q > 0.0 {
+                pp = 0.0 - p;
+                qq = raw_q;
+            } else {
+                pp = p;
+                qq = 0.0 - raw_q;
+            }
+            let dx_prev: f64 = deltax;
+            deltax = raw_q;
+            let use_par: bool = abs(pp) < abs(0.5 * qq * dx_prev) && pp > qq * (lo - x) && pp < qq * (hi - x);
+            if use_par {
+                rat = pp / qq;
+                let u_par: f64 = x + rat;
+                if (u_par - lo) < t2 || (hi - u_par) < t2 {
+                    if x < xm { rat = t1; } else { rat = 0.0 - t1; }
+                }
+            } else {
+                if x >= xm { deltax = lo - x; } else { deltax = hi - x; }
+                rat = cg * deltax;
+            }
+        } else {
+            if x >= xm { deltax = lo - x; } else { deltax = hi - x; }
+            rat = cg * deltax;
+        }
+        let u: f64 = 0.0;
+        if abs(rat) >= t1 {
+            u = x + rat;
+        } else {
+            if rat >= 0.0 { u = x + t1; } else { u = x - t1; }
+        }
+        let fu: f64 = f(u);
+        if fu > fx {
+            if u < x { lo = u; } else { hi = u; }
+            if fu <= fw || w == x {
+                v = w; fv = fw;
+                w = u; fw = fu;
+            } else {
+                if fu <= fv || v == x || v == w {
+                    v = u; fv = fu;
+                }
+            }
+        } else {
+            if u >= x { lo = x; } else { hi = x; }
+            v = w; fv = fw;
+            w = x; fw = fx;
+            x = u; fx = fu;
+        }
+        i = i + 1;
+    }
+    return x;
+}
+
+// Newton's method for 1D minimization: x ← x − f'(x)/f''(x).
+// f' and f'' approximated by central differences with h = 1e-5.
+// Requires x0 near the desired minimum; quadratically convergent once close.
+// WCET = max_iter × (3 × f_cycles + 144) cycles; f_cycles depends on caller's f.
+// bounded_stack = 248 + f's bounded_stack bytes.
+fn newton_min(x0: f64, f: fn(f64) -> f64, tol: f64, max_iter: i64) -> f64 {
+    let h: f64 = 1.0e-5;
+    let x: f64 = x0;
+    let i: i64 = 0;
+    while i < max_iter {
+        let fxmh: f64 = f(x - h);
+        let fx: f64 = f(x);
+        let fxph: f64 = f(x + h);
+        let fp: f64 = diff_central(fxmh, fxph, h);
+        let fpp: f64 = diff_second(fxmh, fx, fxph, h);
+        if abs(fpp) < 1.0e-15 {
+            return x;
+        }
+        let step: f64 = fp / fpp;
+        x = x - step;
+        if abs(step) < tol {
+            return x;
+        }
+        i = i + 1;
+    }
+    return x;
+}
+
 // ── ODE solvers ───────────────────────────────────────────────────────────────
 
 #[bounded_stack(bytes = 64)]

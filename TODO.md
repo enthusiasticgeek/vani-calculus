@@ -54,6 +54,12 @@ scalar f64 arithmetic — all confirmed working on `Vec<f64>` in the current com
 - [x] `newton_step` → full `newton` — Newton-Raphson using `diff_central` for f′
 - [x] `brent` — Brent's method (bisect + secant + inverse quadratic); most robust single-function root-finder
 
+### Optimization
+
+- [x] `golden_section(a, b, f, tol, max_iter)` — golden-section search; 1D min of unimodal f on [a, b]; ≈2.08 log₁₀((b-a)/tol) evals
+- [x] `brent_min(a, b, f, tol, max_iter)` — Brent's method for 1D minimization (parabolic interpolation + golden-section fallback); superlinear convergence
+- [x] `newton_min(x0, f, tol, max_iter)` — Newton's method x ← x − f′/f′′ (central-difference approx, h=1e-5); quadratically convergent near minimum
+
 ### ODE solvers
 
 - [x] `euler_step` → `euler_solve` — apply step over a time Vec, return `Vec<f64>` of y values
