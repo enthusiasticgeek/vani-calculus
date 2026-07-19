@@ -9,7 +9,7 @@ Provides integration, differentiation, root-finding, ODE solvers, polynomial ari
 ```toml
 # vani.toml
 [deps]
-calculus = { registry = "kosh", version = "^0.1" }
+calculus = { registry = "kosh", version = "^0.2" }
 ```
 
 ```sh
@@ -17,16 +17,18 @@ vanic add calculus
 vanic build
 ```
 
-## What's included (v0.1 stubs — see TODO.md for implementation status)
+## What's included (v0.2.0)
 
 | Module | Functions |
 |---|---|
-| Integration | `integrate_trapz`, `integrate_simpson`, `integrate_romberg` |
-| Differentiation | `diff_central`, `diff_forward`, `diff_second`, `gradient_1d` |
-| Root-finding | `bisect_step`, `secant_step`, `newton_step` |
-| ODE | `euler_step`, `rk4_step` |
-| Polynomials | `poly_eval` (Horner), `poly_deriv_coeffs` |
-| Interpolation | `lagrange_interp` |
+| Integration | `integrate_trapz`, `integrate_simpson`, `integrate_romberg`, `integrate_gauss_legendre_5`, `integrate_adaptive_trapz` |
+| Differentiation | `diff_central`, `diff_forward`, `diff_second`, `gradient_1d`, `jacobian_1d`, `hessian_diag` |
+| Root-finding | `bisect`, `secant`, `newton`, `brent` |
+| Optimization | `golden_section`, `brent_min`, `newton_min` |
+| ODE solvers | `euler_solve`, `rk4_solve`, `rk45_step`, `adams_bashforth_2` |
+| Polynomials | `poly_eval`, `poly_deriv_coeffs`, `poly_add`, `poly_mul` |
+| Interpolation | `lagrange_interp`, `linear_interp_table`, `cubic_spline_natural`, `cubic_spline_eval` |
+| Series | `kahan_sum`, `partial_sum`, `running_mean_update` |
 
 ## What this library does NOT provide
 
