@@ -89,11 +89,71 @@ scalar f64 arithmetic — all confirmed working on `Vec<f64>` in the current com
 
 ---
 
+## v0.3.0 additions — implicit ODE solvers and boundary-value problems
+
+Fills two gaps flagged in kosh-index/ROADMAP.md's "Known gaps within
+'mostly done' rows" (N1: implicit/stiff ODE solvers; N2: ODE
+boundary-value-problem solver).
+
+### Implicit ODE solvers (N1)
+
+- [x] `backward_euler_step` / `backward_euler_solve` — each step solves its
+      implicit equation via Newton's method (central-difference derivative,
+      same technique `newton()` uses), NOT fixed-point iteration -- fixed-
+      point iteration on backward Euler is only a contraction for
+      `h < 1/|df/dy|`, which would fail to converge on exactly the stiff
+      problems this solver exists for. Validated: matches the algebraic
+      solution of the implicit equation for a linear ODE, and stays bounded
+      on a stiff problem (`dy/dt=-50y`, `h=0.1`) where `euler_solve`
+      diverges -- see `tests/test_implicit_ode.vani`.
+- [x] `crank_nicolson_step` / `crank_nicolson_solve` — same Newton-based
+      implicit solve, trapezoidal (second-order) instead of backward
+      (first-order). Validated as more accurate than backward Euler at the
+      same step size on a non-stiff problem.
+
+### ODE boundary-value problems via shooting (N2)
+
+- [x] `bvp_rk4_step` — paired RK4 step for `y''=f(t,y,y')`, packed as
+      `[y,v]` (a function can only return one value, so the 2D state is a
+      `Vec<f64>` of length 2 rather than two separate returns)
+- [x] `bvp_shoot_integrate` / `bvp_shoot_trajectory` — forward-integrate
+      from a guessed initial slope; `_integrate` returns just the endpoint
+      (cheap, used inside the search), `_trajectory` returns the full path
+- [x] `bvp_shoot_solve` — secant search over the initial slope (own inlined
+      loop, not a reuse of `secant()` -- `secant` takes a `fn(f64)->f64`
+      and vāṇी has no closures to capture `a`/`b`/`ya`/`yb`/`f` into one).
+      Validated against `y''=-y`, `y(0)=0`, `y(pi/2)=1` (exact: `sin(t)`)
+      from deliberately wrong initial-slope guesses, checked at every point
+      of the returned trajectory (max error ~4e-9), not just the endpoint
+      -- see `tests/test_bvp.vani`.
+
+### Tests and examples
+
+- [x] `tests/test_implicit_ode.vani`, `tests/test_bvp.vani`
+- [x] `examples/stiff_ode_demo.vani` — explicit Euler diverging vs backward
+      Euler / Crank-Nicolson staying bounded, side by side
+- [x] `examples/bvp_shoot_demo.vani` — the `sin(t)` BVP, full trajectory
+      printed against the exact solution
+
+### Not done (N3, out of scope for v0.3.0)
+
+- [ ] Interval arithmetic / rigorous error propagation -- flagged in
+      ROADMAP.md as "no obvious home yet and unclear real-world pull,"
+      intentionally left for a future version if real demand shows up.
+- [ ] BDF2 (2-step backward differentiation) -- backward Euler and
+      Crank-Nicolson already cover "implicit/stiff," and BDF2 needs a
+      special startup step (only one previous point exists initially);
+      not worth the added complexity without a concrete need.
+
+---
+
 ## Safety / WCET annotations
 
-- [x] `#[bounded_stack(bytes=N)]` added to all 26 public functions (exact values from
+- [x] `#[bounded_stack(bytes=N)]` added to all v0.2.0 public functions (exact values from
       `vanic stack-depth`; range 64–520 bytes per frame, 440 bytes entry-point max for
-      `integrate_romberg`).
+      `integrate_romberg`). The 8 v0.3.0 additions follow the same discipline via
+      `vanic check`'s exact reported worst-case; largest is `bvp_shoot_solve` at
+      784 bytes (composes the secant loop with `bvp_shoot_integrate` -> `bvp_rk4_step`).
 - [x] `#[bounded(52)]` added to `integrate_adaptive_trapz` (52 = f64 mantissa halvings
       before interval underflow; resolves the UNBOUNDED self-recursion warning).
 - [x] `#[wcet(cycles=N)]` added to all 10 leaf functions (no loops, no fn-ptr args);

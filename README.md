@@ -9,7 +9,7 @@ Provides integration, differentiation, root-finding, ODE solvers, polynomial ari
 ```toml
 # vani.toml
 [deps]
-calculus = { registry = "kosh", version = "^0.2" }
+calculus = { registry = "kosh", version = "^0.3" }
 ```
 
 ```sh
@@ -17,7 +17,7 @@ vanic add calculus
 vanic build
 ```
 
-## What's included (v0.2.0)
+## What's included (v0.3.0)
 
 | Module | Functions |
 |---|---|
@@ -25,7 +25,9 @@ vanic build
 | Differentiation | `diff_central`, `diff_forward`, `diff_second`, `gradient_1d`, `jacobian_1d`, `hessian_diag` |
 | Root-finding | `bisect`, `secant`, `newton`, `brent` |
 | Optimization | `golden_section`, `brent_min`, `newton_min` |
-| ODE solvers | `euler_solve`, `rk4_solve`, `rk45_step`, `adams_bashforth_2` |
+| ODE solvers (explicit) | `euler_solve`, `rk4_solve`, `rk45_step`, `adams_bashforth_2` |
+| ODE solvers (implicit, v0.3.0) | `backward_euler_step`, `backward_euler_solve`, `crank_nicolson_step`, `crank_nicolson_solve` — A-stable, stay bounded on stiff systems where the explicit solvers above diverge; each step solves its implicit equation with Newton's method |
+| ODE boundary-value problems (v0.3.0) | `bvp_rk4_step`, `bvp_shoot_integrate`, `bvp_shoot_trajectory`, `bvp_shoot_solve` — shooting method: secant search over the initial slope until a forward RK4 integration hits the target endpoint |
 | Polynomials | `poly_eval`, `poly_deriv_coeffs`, `poly_add`, `poly_mul` |
 | Interpolation | `lagrange_interp`, `linear_interp_table`, `cubic_spline_natural`, `cubic_spline_eval` |
 | Series | `kahan_sum`, `partial_sum`, `running_mean_update` |
