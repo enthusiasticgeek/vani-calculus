@@ -104,6 +104,7 @@ fn integrate_romberg(a: f64, b: f64, ys: ref Vec<f64>, levels: i64) -> f64 {
 // 5-point Gauss-Legendre quadrature on [a, b]; baked-in nodes and weights.
 // WCET = 5 × f_cycles + 100; f_cycles depends on caller's f.
 // bounded_stack = 144 + f's bounded_stack bytes.
+#[wcet(cycles = 152)]
 fn integrate_gauss_legendre_5(a: f64, b: f64, f: fn(f64) -> f64) -> f64 {
     let mid: f64 = (a + b) / 2.0;
     let half: f64 = (b - a) / 2.0;
@@ -583,6 +584,7 @@ fn rk4_solve(y0: f64, ts: ref Vec<f64>, f: fn(f64, f64) -> f64) -> Vec<f64> {
 // Dormand-Prince RK45 step (5th-order solution).
 // WCET = 6 × f_cycles + 120 cycles; f_cycles depends on caller's f.
 // bounded_stack = 120 + f's bounded_stack bytes.
+#[wcet(cycles = 321)]
 fn rk45_step(t: f64, y: f64, h: f64, f: fn(f64, f64) -> f64) -> f64 {
     let k1: f64 = f(t, y);
     let k2: f64 = f(t + h / 5.0,        y + h * k1 / 5.0);
@@ -781,6 +783,7 @@ fn bdf2_solve(y0: f64, ts: ref Vec<f64>, f: fn(f64, f64) -> f64, tol: f64, max_i
 
 // One RK4 step for the paired system y'=v, v'=f(t,y,v). Returns [y_new, v_new].
 #[bounded_stack(bytes = 264)]
+#[wcet(cycles = 329)]
 fn bvp_rk4_step(t: f64, y: f64, v: f64, h: f64, f: fn(f64, f64, f64) -> f64) -> Vec<f64> {
     let k1y: f64 = v;
     let k1v: f64 = f(t, y, v);
