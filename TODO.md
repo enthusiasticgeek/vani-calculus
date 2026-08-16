@@ -135,15 +135,53 @@ boundary-value-problem solver).
 - [x] `examples/bvp_shoot_demo.vani` — the `sin(t)` BVP, full trajectory
       printed against the exact solution
 
+### BDF2 (v0.3.1)
+
+- [x] `bdf2_step` / `bdf2_solve` — second-order-accurate 2-step backward
+      differentiation formula (`y_next = (4/3)*y_curr - (1/3)*y_prev +
+      (2h/3)*f(t_next,y_next)`), solved via the same Newton's-method
+      central-difference technique as `backward_euler_step` /
+      `crank_nicolson_step`. Being a 2-step method it can't start from `y0`
+      alone; `bdf2_solve` bootstraps the missing first point with one
+      `backward_euler_step` (also A-stable, so no stability gap is
+      introduced) before switching to full BDF2. The fixed `4/3, -1/3, 2h/3`
+      coefficients assume a uniform step size — on a `ts` vector with
+      unequal spacing they're still applied per-interval (same
+      `hh = ts[i+1]-ts[i]` pattern as the other `*_solve` functions), which
+      loses second-order accuracy on that interval but stays stable and
+      convergent; documented in the code rather than adding variable-step
+      BDF2's fuller coefficient formula without a concrete need for it.
+      Validated: `bdf2_step` matches the algebraic solution of its implicit
+      equation for a linear ODE; `bdf2_solve` is more accurate than
+      backward Euler on a non-stiff problem at the same step size, and
+      stays bounded (same as backward Euler / Crank-Nicolson) on a stiff
+      problem where `euler_solve` diverges — see
+      `tests/test_implicit_ode.vani`, `examples/bdf2_demo.vani`.
+      **Correctness verified on `--backend=c` only** — see the
+      vani-compiler LLVM backend gap noted below, which affects the whole
+      file (not just BDF2) and is being tracked/fixed upstream.
+
+> **vani-compiler LLVM backend gap found while validating BDF2** (2026-08-15):
+> `vanic run` (default LLVM backend) crashes with `PHI node entries do not
+> match predecessors!` on *any* call to `backward_euler_step` once it's
+> compiled alongside this file's other functions — reproduced even on the
+> pre-existing (unmodified) `backward_euler_step`/`crank_nicolson_step`
+> tests, so this is **not** a BDF2 regression. `--backend=c` produces
+> correct results in every case checked. Root cause not yet isolated (looks
+> like a module-level codegen interaction between sibling functions sharing
+> the Newton-iteration-in-a-while-loop-with-early-returns shape, not a
+> simple two-function or function-count trigger — a targeted dummy-function
+> test and a raw 48-function-count test both failed to reproduce it in
+> isolation). Filed against vani-compiler; see its `docs/TODO_CURRENT.md`
+> /`docs/v1_limitations.md` for tracking. Until fixed, treat `--backend=c`
+> as the source of truth for this file's correctness and prefer it for CI
+> here.
+
 ### Not done (N3, out of scope for v0.3.0)
 
 - [ ] Interval arithmetic / rigorous error propagation -- flagged in
       ROADMAP.md as "no obvious home yet and unclear real-world pull,"
       intentionally left for a future version if real demand shows up.
-- [ ] BDF2 (2-step backward differentiation) -- backward Euler and
-      Crank-Nicolson already cover "implicit/stiff," and BDF2 needs a
-      special startup step (only one previous point exists initially);
-      not worth the added complexity without a concrete need.
 
 ---
 

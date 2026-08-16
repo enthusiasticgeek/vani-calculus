@@ -699,6 +699,77 @@ fn crank_nicolson_solve(y0: f64, ts: ref Vec<f64>, f: fn(f64, f64) -> f64, tol: 
     return result;
 }
 
+// ── BDF2: 2-step backward differentiation formula (v0.3.1) ──────────────────
+//
+// Second-order-accurate implicit method: solves
+//   y_next = (4/3)*y_curr - (1/3)*y_prev + (2h/3)*f(t_next, y_next)
+// for y_next via Newton's method (central-difference derivative, same
+// technique as backward_euler_step/crank_nicolson_step above). Like backward
+// Euler and Crank-Nicolson, BDF2 is stiffly stable and stays bounded on
+// problems that make explicit Euler diverge -- but being a *2-step* method,
+// it needs two prior points (y_prev, y_curr) and can't start from y0 alone.
+// bdf2_solve bootstraps the missing first point with one backward_euler_step
+// (itself A-stable, so it doesn't introduce a stability gap the rest of the
+// run doesn't have) before switching to full BDF2 for every later step.
+//
+// The fixed 4/3, -1/3, 2h/3 coefficients assume a uniform step size. On a
+// `ts` vector with unequal spacing, bdf2_solve still applies them per
+// interval (matching backward_euler_solve/crank_nicolson_solve's own
+// hh = ts[i+1]-ts[i] pattern), which loses second-order accuracy on that
+// interval but stays a stable, convergent approximation -- documented here
+// rather than adding variable-step BDF2's more involved coefficient formula
+// without a concrete need for it.
+
+// One BDF2 step given the two prior points y_curr (most recent) and y_prev.
+#[bounded_stack(bytes = 200)]
+fn bdf2_step(y_curr: f64, y_prev: f64, t_next: f64, h: f64, f: fn(f64, f64) -> f64, tol: f64, max_iter: i64) -> f64 {
+    let eps: f64 = 1.0e-6;
+    let rhs: f64 = (4.0 / 3.0) * y_curr - (1.0 / 3.0) * y_prev;
+    let y: f64 = y_curr;
+    let iter: i64 = 0;
+    while iter < max_iter {
+        let gy: f64 = y - rhs - (2.0 * h / 3.0) * f(t_next, y);
+        let gyp: f64 = (y + eps) - rhs - (2.0 * h / 3.0) * f(t_next, y + eps);
+        let gym: f64 = (y - eps) - rhs - (2.0 * h / 3.0) * f(t_next, y - eps);
+        let gp: f64 = (gyp - gym) / (2.0 * eps);
+        if abs(gp) < 1.0e-300 {
+            return y;
+        }
+        let y_new: f64 = y - gy / gp;
+        if abs(y_new - y) < tol {
+            return y_new;
+        }
+        y = y_new;
+        iter = iter + 1;
+    }
+    return y;
+}
+
+// Runs bdf2_step across every interval in ts, bootstrapping the first step
+// with backward_euler_step since BDF2 itself needs two prior points.
+#[bounded_stack(bytes = 424)]
+fn bdf2_solve(y0: f64, ts: ref Vec<f64>, f: fn(f64, f64) -> f64, tol: f64, max_iter: i64) -> Vec<f64> {
+    let n: i64 = len(ts) as i64;
+    let result: Vec<f64> = vec(y0);
+    if n < 2 {
+        return result;
+    }
+    let h0: f64 = ts[1] - ts[0];
+    let y_prev: f64 = y0;
+    let y_curr: f64 = backward_euler_step(ts[1], y0, h0, f, tol, max_iter);
+    push(mut ref result, y_curr);
+    let i: i64 = 1;
+    while i < n - 1 {
+        let hh: f64 = ts[i + 1] - ts[i];
+        let y_next: f64 = bdf2_step(y_curr, y_prev, ts[i + 1], hh, f, tol, max_iter);
+        push(mut ref result, y_next);
+        y_prev = y_curr;
+        y_curr = y_next;
+        i = i + 1;
+    }
+    return result;
+}
+
 // ── ODE boundary-value problems: shooting method (v0.3.0) ───────────────────
 //
 // Solves y'' = f(t, y, y') on [a,b] with Dirichlet conditions y(a)=ya,

@@ -17,7 +17,7 @@ vanic add calculus
 vanic build
 ```
 
-## What's included (v0.3.0)
+## What's included (v0.3.1)
 
 | Module | Functions |
 |---|---|
@@ -26,7 +26,7 @@ vanic build
 | Root-finding | `bisect`, `secant`, `newton`, `brent` |
 | Optimization | `golden_section`, `brent_min`, `newton_min` |
 | ODE solvers (explicit) | `euler_solve`, `rk4_solve`, `rk45_step`, `adams_bashforth_2` |
-| ODE solvers (implicit, v0.3.0) | `backward_euler_step`, `backward_euler_solve`, `crank_nicolson_step`, `crank_nicolson_solve` — A-stable, stay bounded on stiff systems where the explicit solvers above diverge; each step solves its implicit equation with Newton's method |
+| ODE solvers (implicit) | `backward_euler_step`, `backward_euler_solve`, `crank_nicolson_step`, `crank_nicolson_solve`, `bdf2_step`, `bdf2_solve` (v0.3.1) — A-stable, stay bounded on stiff systems where the explicit solvers above diverge; each step solves its implicit equation with Newton's method. `bdf2_*` is second-order accurate like Crank-Nicolson but a 2-step method (bootstraps its first point via `backward_euler_step`) |
 | ODE boundary-value problems (v0.3.0) | `bvp_rk4_step`, `bvp_shoot_integrate`, `bvp_shoot_trajectory`, `bvp_shoot_solve` — shooting method: secant search over the initial slope until a forward RK4 integration hits the target endpoint |
 | Polynomials | `poly_eval`, `poly_deriv_coeffs`, `poly_add`, `poly_mul` |
 | Interpolation | `lagrange_interp`, `linear_interp_table`, `cubic_spline_natural`, `cubic_spline_eval` |
