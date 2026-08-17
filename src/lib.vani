@@ -614,7 +614,7 @@ fn adams_bashforth_2(y_curr: f64, f_prev: f64, f_curr: f64, h: f64) -> f64 {
 // solvers exist for (fixed-point iteration on backward Euler is only a
 // contraction for h < 1/|df/dy|, defeating the point of an unconditionally
 // stable method). Each _step function inlines its own Newton loop rather
-// than factoring out a shared g(y)->f64 helper, since vāṇी has no closures
+// than factoring out a shared g(y)->f64 helper, since vāṇī has no closures
 // and g would need to capture y_curr/h/f/t_next.
 
 // One backward Euler step: solves y_next = y_curr + h*f(t_next, y_next)

@@ -121,7 +121,7 @@ boundary-value-problem solver).
       (cheap, used inside the search), `_trajectory` returns the full path
 - [x] `bvp_shoot_solve` — secant search over the initial slope (own inlined
       loop, not a reuse of `secant()` -- `secant` takes a `fn(f64)->f64`
-      and vāṇी has no closures to capture `a`/`b`/`ya`/`yb`/`f` into one).
+      and vāṇī has no closures to capture `a`/`b`/`ya`/`yb`/`f` into one).
       Validated against `y''=-y`, `y(0)=0`, `y(pi/2)=1` (exact: `sin(t)`)
       from deliberately wrong initial-slope guesses, checked at every point
       of the returned trajectory (max error ~4e-9), not just the endpoint
