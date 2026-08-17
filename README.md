@@ -4,6 +4,8 @@ Numerical calculus library for the [vāṇī compiler](https://github.com/enthus
 
 Provides integration, differentiation, root-finding, ODE solvers, polynomial arithmetic, and interpolation — all as pure vāṇī source. Does **not** reimplement primitive math that is already a vāṇī compiler builtin (`sin`, `cos`, `exp`, `log`, `pow`, `sqrt`, `f64_erf`, `i64_factorial`, etc.).
 
+**API reference / tutorial:** <https://enthusiasticgeek.github.io/vani-calculus/>
+
 ## Add to your project
 
 ```toml
