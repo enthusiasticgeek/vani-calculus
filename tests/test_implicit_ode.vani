@@ -35,6 +35,20 @@ fn test_backward_euler_solve_decay() -> i64 {
     return 0;
 }
 
+// crank_nicolson_step on dy/dt=-2y should match the exact algebraic
+// solution of its implicit trapezoidal equation: y_next = y_curr + (h/2)*
+// (f(t_curr,y_curr) + f(t_next,y_next)) = y_curr + (h/2)*(-2y_curr -
+// 2y_next), which solves to y_next = y_curr*(1-h)/(1+h). Had no direct
+// call site of its own -- only exercised transitively via
+// crank_nicolson_solve's per-interval loop below.
+#[test]
+fn test_crank_nicolson_step_matches_algebraic_solution() -> i64 {
+    let y_next: f64 = crank_nicolson_step(0.0, 1.0, 0.1, 0.1, mild_decay, 1.0e-12, 30);
+    let expected: f64 = 1.0 * (1.0 - 0.1) / (1.0 + 0.1);
+    assert abs(y_next - expected) < 1.0e-8;
+    return 0;
+}
+
 // crank_nicolson_solve on the same problem: second-order, should be
 // noticeably more accurate than backward Euler at the same step size.
 #[test]
